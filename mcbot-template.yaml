@@ -1,0 +1,8 @@
+database:
+  mongo:
+    uri: mongodb://localhost:27017
+    db: mcbot
+admin:
+  # inherit: 继承 QChatGPT 管理员列表
+  # qq号: 指定管理员
+  - inherit
