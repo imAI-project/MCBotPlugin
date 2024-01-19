@@ -87,82 +87,88 @@ class MCBotPlugin(Plugin):
         **kwargs
     ):
         
-        if self._check_priority(
-            sender_id,
-            is_admin
-        ):
-            reply_text = ""
-            try:
-                if command == "bind":
+        reply_text = ""
+        try:
+            if command == "bind":
+
+                if self._check_priority(
+                    sender_id,
+                    is_admin
+                ):
                     event.prevent_default()
                     if len(params) == 1:
                         self.ap.dao.bind_server(launcher_id, params[0])
                         reply_text = "绑定成功。"
                     else:
                         reply_text = "参数错误。"
-                elif command == "unbind":
+            elif command == "unbind":
+
+                if self._check_priority(
+                    sender_id,
+                    is_admin
+                ):
                     event.prevent_default()
                     self.ap.dao.unbind_server(launcher_id)
                     reply_text = "解绑成功。"
-                elif command == "status":
-                    event.prevent_default()
-                    bind_server = self.ap.dao.get_bind_server(launcher_id)
+            elif command == "status":
+                event.prevent_default()
+                bind_server = self.ap.dao.get_bind_server(launcher_id)
 
-                    if bind_server:
-                        server_addr = bind_server.split(":")[0]
-                        server_port = bind_server.split(":")[1] if len(bind_server.split(":")) > 1 else 25565
-                        
-                        stats = mctool.ping(server_addr, server_port)
+                if bind_server:
+                    server_addr = bind_server.split(":")[0]
+                    server_port = bind_server.split(":")[1] if len(bind_server.split(":")) > 1 else 25565
+                    
+                    stats = mctool.ping(server_addr, server_port)
 
-                        players = stats['players']['sample'] if 'sample' in stats['players'] else []
-                        players = [
-                            player[0]
-                            for player in players
-                        ]
+                    players = stats['players']['sample'] if 'sample' in stats['players'] else []
+                    players = [
+                        player[0]
+                        for player in players
+                    ]
 
-                        player_str = '\n'.join(players)
+                    player_str = '\n'.join(players)
 
-                        reply_text = f"""{stats['description']}
+                    reply_text = f"""{stats['description']}
 版本: {stats['version']['name']}
 在线玩家: \n{player_str}"""
-                    else:
-                        reply_text = "未绑定服务器。"
-                elif command == "time":
-                    event.prevent_default()
-                    period = 24*60
+                else:
+                    reply_text = "未绑定服务器。"
+            elif command == "time":
+                event.prevent_default()
+                period = 24*60
 
-                    if len(params) == 1:
-                        period = int(params[0])
+                if len(params) == 1:
+                    period = int(params[0])
 
-                    start = datetime.datetime.now() - datetime.timedelta(minutes=period)
-                    end = datetime.datetime.now()
-                    
-                    start_str = start.strftime("%Y-%m-%d %H:%M")
-                    end_str = end.strftime("%Y-%m-%d %H:%M")
+                start = datetime.datetime.now() - datetime.timedelta(minutes=period)
+                end = datetime.datetime.now()
+                
+                start_str = start.strftime("%Y-%m-%d %H:%M")
+                end_str = end.strftime("%Y-%m-%d %H:%M")
 
-                    online_time = self.ap.dao.count_record_time(
-                        start,
-                        end,
-                        self.ap.dao.get_bind_server(launcher_id)
-                    )
+                online_time = self.ap.dao.count_record_time(
+                    start,
+                    end,
+                    self.ap.dao.get_bind_server(launcher_id)
+                )
 
-                    online_time = sorted(online_time.items(), key=lambda x: x[1], reverse=True)
+                online_time = sorted(online_time.items(), key=lambda x: x[1], reverse=True)
 
-                    reply_text = f"在线时长统计: \n{start_str} - {end_str}\n\n" + '\n'.join([
-                        f"{player}: {int(time/60)} 分钟"
-                        for player, time in online_time
-                    ])
+                reply_text = f"在线时长统计: \n{start_str} - {end_str}\n\n" + '\n'.join([
+                    f"{player}: {int(time/60)} 分钟"
+                    for player, time in online_time
+                ])
 
-            except Exception as e:
-                reply_text = f"操作失败: {e}"
-                traceback.print_exc()
-            
-            event.add_return(
-                "reply",
-                [
-                    "[MCBot] "+reply_text
-                ]
-            )
+        except Exception as e:
+            reply_text = f"操作失败: {e}"
+            traceback.print_exc()
+        
+        event.add_return(
+            "reply",
+            [
+                "[MCBot] "+reply_text
+            ]
+        )
 
     # 插件卸载时触发
     def __del__(self):
